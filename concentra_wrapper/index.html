@@ -25,7 +25,7 @@
       </div>
     </div>
     <div class="topbar-actions">
-      <a class="btn btn-ghost" href="../concentra/Challenges_Catalog.pdf" download>
+      <a class="btn btn-ghost" href="../concentra/Concentra — Challenges Program Catalog.pdf" download>
         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
         Download PDF
       </a>
@@ -60,6 +60,7 @@
     <div class="catalog-frame">
       <div class="catalog-embed">
         <iframe
+          id="catalogFrame"
           src="../concentra/index.html"
           allowfullscreen
           allow="fullscreen; autoplay; encrypted-media; picture-in-picture; web-share; clipboard-read; clipboard-write; accelerometer; gyroscope"
@@ -70,7 +71,7 @@
       </div>
       <div class="catalog-caption">
         <span class="catalog-caption-text">Use the catalog's built-in controls to browse, view full pages, or download</span>
-        <a class="btn btn-primary" href="../concentra/Challenges_Catalog.pdf" download>
+        <a class="btn btn-primary" href="../concentra/Concentra — Challenges Program Catalog.pdf" download>
           Download a portable copy
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -91,6 +92,47 @@
     </div>
   </div>
 </footer>
+
+<script>
+  // Hide FlipHTML5 home button and any links back to fliphtml5.com
+  (function() {
+    var iframe = document.getElementById('catalogFrame');
+    if (!iframe) return;
+
+    function hideFlipHTML5Branding() {
+      try {
+        var doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!doc) return;
+
+        // Inject CSS into the iframe's head
+        var style = doc.createElement('style');
+        style.textContent = [
+          'a[href*="fliphtml5.com"],',
+          'a[href*="fliphtml5"],',
+          '[class*="home" i][class*="btn" i],',
+          '[class*="home" i][class*="button" i],',
+          '[id*="home" i][id*="btn" i],',
+          '.flip-home, .btn-home, .home-icon, .toolbar-home {',
+          '  display: none !important;',
+          '  visibility: hidden !important;',
+          '  pointer-events: none !important;',
+          '}'
+        ].join('\n');
+        doc.head.appendChild(style);
+      } catch (e) {
+        // Cross-origin or timing issues — silent fail
+      }
+    }
+
+    // Run on load and a few seconds after (in case FlipHTML5 loads UI asynchronously)
+    iframe.addEventListener('load', function() {
+      hideFlipHTML5Branding();
+      setTimeout(hideFlipHTML5Branding, 1000);
+      setTimeout(hideFlipHTML5Branding, 3000);
+      setTimeout(hideFlipHTML5Branding, 6000);
+    });
+  })();
+</script>
 
 </body>
 </html>
