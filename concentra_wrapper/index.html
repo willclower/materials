@@ -94,36 +94,98 @@
 </footer>
 
 <script>
-  // Hide FlipHTML5 home button and any links back to fliphtml5.com
+  // Disable Return Home button and any navigation away from our domain
   (function() {
     var iframe = document.getElementById('catalogFrame');
     if (!iframe) return;
 
-    function hideFlipHTML5Branding() {
+    function neutralizeHomeButton(doc) {
+      if (!doc) return;
       try {
-        var doc = iframe.contentDocument || iframe.contentWindow.document;
-        if (!doc) return;
+        // Block clicks anywhere that would navigate to fliphtml5.com or external sites
+        doc.addEventListener('click', function(e) {
+          var target = e.target;
+          while (target && target !== doc.body) {
+            // Check if this element or any parent has a Return Home label
+            var label = (target.getAttribute && (target.getAttribute('aria-label') || target.getAttribute('title') || '')) || '';
+            if (label.toLowerCase().includes('home') || label.toLowerCase().includes('return')) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              return false;
+            }
+            // Check for any href pointing to fliphtml5
+            if (target.href && target.href.includes('fliphtml5')) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              return false;
+            }
+            target = target.parentNode;
+          }
+        }, true); // useCapture: true catches events before they reach handlers
 
-        // Inject CSS into the iframe's head — target ONLY the Return Home button
+        // Inject CSS to hide common patterns
         var style = doc.createElement('style');
-        style.textContent = [
-          'button[aria-label="Return Home"] {',
-          '  display: none !important;',
-          '}'
-        ].join('\n');
+        style.id = 'hide-home-style';
+        style.textContent =
+          'button[aria-label="Return Home"],' +
+          '[aria-label="Return Home"],' +
+          '[title="Return Home"],' +
+          'a[href*="fliphtml5"] { display: none !important; visibility: hidden !important; pointer-events: none !important; }';
         doc.head.appendChild(style);
+
+        // Override window.open to block popups to fliphtml5
+        if (doc.defaultView) {
+          var originalOpen = doc.defaultView.open;
+          doc.defaultView.open = function(url) {
+            if (url && url.includes('fliphtml5')) return null;
+            return originalOpen.apply(doc.defaultView, arguments);
+          };
+
+          // Override location changes
+          var originalAssign = doc.defaultView.location.assign;
+          try {
+            Object.defineProperty(doc.defaultView, 'location', {
+              get: function() { return doc.location; },
+              set: function(url) {
+                if (typeof url === 'string' && url.includes('fliphtml5')) return;
+                doc.location = url;
+              }
+            });
+          } catch (e) {}
+        }
+
+        // Also catch any elements whose onclick navigates to fliphtml5
+        doc.querySelectorAll('*').forEach(function(el) {
+          if (el.onclick) {
+            var src = el.onclick.toString();
+            if (src.includes('fliphtml5') || src.includes('homepage')) {
+              el.onclick = function(e) { if (e) e.preventDefault(); return false; };
+            }
+          }
+        });
       } catch (e) {
-        // Cross-origin or timing issues — silent fail
+        console.warn('Could not neutralize home button:', e);
       }
     }
 
-    // Run on load and a few seconds after (in case FlipHTML5 loads UI asynchronously)
-    iframe.addEventListener('load', function() {
-      hideFlipHTML5Branding();
-      setTimeout(hideFlipHTML5Branding, 1000);
-      setTimeout(hideFlipHTML5Branding, 3000);
-      setTimeout(hideFlipHTML5Branding, 6000);
-    });
+    function processIframe() {
+      try {
+        var doc = iframe.contentDocument || iframe.contentWindow.document;
+        neutralizeHomeButton(doc);
+      } catch (e) {}
+    }
+
+    iframe.addEventListener('load', processIframe);
+    processIframe();
+
+    // Repeated retries to catch UI added after load
+    var retries = 60;
+    var interval = setInterval(function() {
+      processIframe();
+      if (--retries <= 0) clearInterval(interval);
+    }, 500);
   })();
 </script>
 
