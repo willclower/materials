@@ -104,18 +104,11 @@
         var doc = iframe.contentDocument || iframe.contentWindow.document;
         if (!doc) return;
 
-        // Inject CSS into the iframe's head
+        // Inject CSS into the iframe's head — target ONLY the Return Home button
         var style = doc.createElement('style');
         style.textContent = [
-          'a[href*="fliphtml5.com"],',
-          'a[href*="fliphtml5"],',
-          '[class*="home" i][class*="btn" i],',
-          '[class*="home" i][class*="button" i],',
-          '[id*="home" i][id*="btn" i],',
-          '.flip-home, .btn-home, .home-icon, .toolbar-home {',
+          'button[aria-label="Return Home"] {',
           '  display: none !important;',
-          '  visibility: hidden !important;',
-          '  pointer-events: none !important;',
           '}'
         ].join('\n');
         doc.head.appendChild(style);
