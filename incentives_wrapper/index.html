@@ -1,1 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Incentive Management — Concentra</title>
+<link rel="stylesheet" href="../shared/styles.css">
+<style>
+  :root {
+    /* === Concentra brand === */
+    --client-primary: #236192;
+    --client-secondary: #ed8b00;
+    --client-logo-bg: #ffffff;
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="cobrand">
+      <div class="logo-chip" style="background: #ffffff; padding: 4px 10px;">
+        <img src="../assets/logos/concentra.png" alt="Concentra">
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <a class="btn btn-ghost" href="../incentives/Incentives_Catalog.pdf" download>
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Download PDF
+      </a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero">
+    <div>
+      <span class="eyebrow">Incentive Management</span>
+      <h1>Participation that<br><em>actually happens</em>.</h1>
+      <p class="hero-intro">
+        Wellness programs succeed when employees show up — and incentives are the proven mechanism that turns "good idea" into measurable participation. This catalog brings together the incentive structures, reward tiers, and engagement mechanics that drive real outcomes across employer populations.
+      </p>
+      <p class="hero-intro" style="margin-top: 1.25rem;">
+        Flip through the catalog below to see how each incentive program works, or download a copy to share with your team.
+      </p>
+    </div>
+    <aside class="hero-meta">
+      <div class="hero-meta-label">Format</div>
+      <div class="hero-meta-value">Interactive catalog</div>
+      <div class="hero-meta-label" style="margin-top: 1rem;">Focus</div>
+      <div class="hero-meta-value">Incentive design</div>
+      <div class="hero-meta-label" style="margin-top: 1rem;">Edition</div>
+      <div class="hero-meta-value">2026</div>
+    </aside>
+  </section>
+
+  <section class="catalog-section">
+    <div class="catalog-frame">
+      <div class="catalog-embed">
+        <iframe
+          id="catalogFrame"
+          src="../incentives/index.html"
+          allowfullscreen
+          allow="fullscreen; autoplay; encrypted-media; picture-in-picture; web-share; clipboard-read; clipboard-write; accelerometer; gyroscope"
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads allow-presentation allow-modals"
+          loading="lazy"
+          title="Incentive Management Catalog">
+        </iframe>
+      </div>
+      <div class="catalog-caption">
+        <span class="catalog-caption-text">Use the catalog's built-in controls to browse, view full pages, or download</span>
+        <a class="btn btn-primary" href="../incentives/Incentives_Catalog.pdf" download>
+          Download a portable copy
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      Incentive management powered by Mediterranean Wellness — clinical integration technology for population health.
+    </div>
+    <div class="footer-meta">
+      Questions? <a href="mailto:admin@mymedwellness.com">admin@mymedwellness.com</a><br>
+      <span style="opacity: 0.7;">© Concentra · 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Disable Return Home button and any navigation away from our domain
+  (function() {
+    var iframe = document.getElementById('catalogFrame');
+    if (!iframe) return;
+
+    function neutralizeHomeButton(doc) {
+      if (!doc) return;
+      try {
+        // Block clicks anywhere that would navigate to fliphtml5.com or external sites
+        doc.addEventListener('click', function(e) {
+          var target = e.target;
+          while (target && target !== doc.body) {
+            var label = (target.getAttribute && (target.getAttribute('aria-label') || target.getAttribute('title') || '')) || '';
+            if (label.toLowerCase().includes('home') || label.toLowerCase().includes('return')) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              return false;
+            }
+            if (target.href && target.href.includes('fliphtml5')) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+              return false;
+            }
+            target = target.parentNode;
+          }
+        }, true);
+
+        // Inject CSS to hide common patterns
+        if (!doc.head.querySelector('#hide-home-style')) {
+          var style = doc.createElement('style');
+          style.id = 'hide-home-style';
+          style.textContent =
+            'button[aria-label="Return Home"],' +
+            '[aria-label="Return Home"],' +
+            '[title="Return Home"],' +
+            'a[href*="fliphtml5"] { display: none !important; visibility: hidden !important; pointer-events: none !important; }';
+          doc.head.appendChild(style);
+        }
+
+        // Override window.open to block popups to fliphtml5
+        if (doc.defaultView) {
+          var originalOpen = doc.defaultView.open;
+          doc.defaultView.open = function(url) {
+            if (url && url.includes('fliphtml5')) return null;
+            return originalOpen.apply(doc.defaultView, arguments);
+          };
+        }
+
+        // Catch any elements whose onclick navigates to fliphtml5
+        doc.querySelectorAll('*').forEach(function(el) {
+          if (el.onclick) {
+            var src = el.onclick.toString();
+            if (src.includes('fliphtml5') || src.includes('homepage')) {
+              el.onclick = function(e) { if (e) e.preventDefault(); return false; };
+            }
+          }
+        });
+      } catch (e) {
+        console.warn('Could not neutralize home button:', e);
+      }
+    }
+
+    function processIframe() {
+      try {
+        var doc = iframe.contentDocument || iframe.contentWindow.document;
+        neutralizeHomeButton(doc);
+      } catch (e) {}
+    }
+
+    iframe.addEventListener('load', processIframe);
+    processIframe();
+
+    var retries = 60;
+    var interval = setInterval(function() {
+      processIframe();
+      if (--retries <= 0) clearInterval(interval);
+    }, 500);
+  })();
+</script>
+
+</body>
+</html>
 
