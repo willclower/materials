@@ -1,158 +1,183 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta charset="utf-8" />
-<title>Concentra — Incentive Management</title>
-<meta name="viewport" content="width=1920" />
+	<title>Incentive_Management</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<meta http-equiv="Expires" content="0">
+	<meta http-equiv="Pragma" content="no-cache">
+	<meta http-equiv="Cache-control" content="no-cache">
+	<meta http-equiv="Cache" content="no-cache">
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="monitor-signature" content="monitor:player:html5">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta http-equiv="X-UA-Compatible" content="chrome=1,IE=edge">
+	<meta name="keywords" content="" />
+	<meta name="description" content="" />
+	<meta name="generator" content="fliphtml5.com" />
+	<link rel="icon" href="" type="image/x-icon">
+	<link rel="image_src" href="./files/shot.jpg"/>
+	<meta name="og:image" content="./files/shot.jpg">
+	<meta property="og:image" content="./files/shot.jpg">
+	<meta property="og:title" content="Incentive_Management" />
+	<meta property="og:type" content="article" />
+	<meta property="og:url" content="" />
+	<meta property="og:description" content="" />
+	<meta itemprop="name" content="Incentive_Management">
+	<meta itemprop="description" content="">
+	<meta itemprop="image" content="./files/shot.jpg">
+	<meta name="twitter:site" content="@FlipHTML5">
+	<meta name="twitter:title" content="Incentive_Management">
+	<meta name="twitter:description" content="">
+	<meta name="twitter:image" content="./files/shot.jpg">
+	<meta name="twitter:card" content="summary_large_image">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@400;500;600;700;800&family=Open+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<style>
+		html {width: 100%;height: 100%;left: 0;top: 0;margin: 0;padding: 0;position: fixed;}
+		body {width: 100%;height: 100%;left: 0;top: 0;margin: 0;padding: 0;position: fixed;}
+	</style>
 
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="page-styles.css">
-<link rel="stylesheet" href="mockups.css">
-<script src="deck-stage.js"></script>
 </head>
+
 <body>
+	<div id="tmpLoading" style="width: 100%; height: 100%; position: absolute; z-index: -2;background:#323232;"></div>
+	
+	<script type="text/javascript" src="javascript/config.js"></script>
+	<script type="text/javascript" src="./javascript/LoadingJS.js"></script>
+	<script type="text/javascript" src="javascript/deString.js"></script>
+	<script type="text/javascript" src="javascript/jquery-4.0.0.min.js"></script>
+	<script type="text/javascript" src="javascript/book.min.js"></script>
+	<script type="text/javascript" src="javascript/pageItems.min.js"></script>
+	<script type="text/javascript" src="./files/yzReader/templates/Slide/js/app-theme.js"></script>
+	<script src="javascript/flipHtml5.hiSlider2.min.js"></script>
+	<link rel="stylesheet" href="style/hiSlider2.min.css" />
+	<script src="slide_javascript/slideJS.js"></script>
+	
+	<script type="text/javascript">
+	(function() {
+		var dynamicLoading = {
+			load: function(path, callback, onFailed) {
+				var head = document.getElementsByTagName("head")[0];
+				var paths = Array.isArray(path) ? path : [path];
+				var loadedCount = 0;
+				var totalCount = paths.length;
+				var hasCallback = typeof callback === "function";
+				var hasOnFailed = typeof onFailed === "function";
 
-<deck-stage>
+				if (paths.length === 0) {
+					hasCallback && callback();
+					return;
+				}
 
-  <!-- ============================================================
-       PAGE 1 — COVER
-       ============================================================ -->
-  <section class="page cover" data-screen-label="01 Cover">
+				function onLoad() {
+					loadedCount++;
+					if (loadedCount === totalCount && hasCallback) {
+						callback();
+					}
+				}
 
-    <div class="cover-left">
-      <div class="cover-wordmark">
-        <span class="cw-c">Concentra</span>
-        <span class="cw-divider">·</span>
-        <span class="cw-product">Solutions</span>
-      </div>
+				function onError() {
+					if (hasOnFailed) {
+						onFailed();
+					}
+				}
 
-      <div class="cover-eyebrow">
-        <span class="ce-num">01 / 06</span>
-        <span class="ce-label">Incentive Management</span>
-      </div>
+				function isCssFile(filePath) {
+					return filePath.indexOf(".css") !== -1;
+				}
 
-      <h1 class="cover-title">
-        Reward the work<br/>
-        that earns<br/>
-        <em>better&nbsp;health</em>
-      </h1>
+				for (var i = 0; i < paths.length; i++) {
+					var currentPath = paths[i];
+					if (!currentPath) {
+						loadedCount++;
+						if (loadedCount === totalCount && hasCallback) {
+							callback();
+						}
+						continue;
+					}
+					var element;
 
-      <p class="cover-lede">
-        A turnkey system for assigning, tracking, and awarding incentive
-        points across any wellbeing activity. Concentra runs the
-        program — your team distributes the rewards.
-      </p>
+					if (isCssFile(currentPath)) {
+						element = document.createElement("link");
+						element.href = currentPath;
+						element.rel = "stylesheet";
+						element.type = "text/css";
+						if (hasCallback || hasOnFailed) {
+							element.onload = onLoad;
+							element.onerror = onError;
+						} else {
+							onLoad();
+						}
+					} else {
+						element = document.createElement("script");
+						element.src = currentPath;
+						element.type = "text/javascript";
+						element.async = false;
+						if (hasCallback || hasOnFailed) {
+							element.onload = element.onreadystatechange = function() {
+								if (this.readyState === 'complete' || this.readyState === 'loaded' || !this.readyState) {
+									onLoad();
+								}
+							};
+							element.onerror = onError;
+						} else {
+							onLoad();
+						}
+					}
+					head.appendChild(element);
+				}
+			}
+		};
 
-      <div class="cover-steps">
-        <div class="cs-step">
-          <span class="cs-n">01</span>
-          <span class="cs-l">Assign</span>
-          <span class="cs-d">Activities &amp; point values</span>
-        </div>
-        <div class="cs-step">
-          <span class="cs-n">02</span>
-          <span class="cs-l">Track</span>
-          <span class="cs-d">Real-time member progress</span>
-        </div>
-        <div class="cs-step">
-          <span class="cs-n">03</span>
-          <span class="cs-l">Award</span>
-          <span class="cs-d">Points when thresholds hit</span>
-        </div>
-        <div class="cs-step is-client">
-          <span class="cs-n">04</span>
-          <span class="cs-l">Distribute</span>
-          <span class="cs-d">Client fulfills the reward</span>
-        </div>
-      </div>
+		dynamicLoading.load('javascript/Browser.js', function() {
+			if (typeof isPhone !== 'undefined' && typeof isPad !== 'undefined') {
+				if (isPhone() || isPad()) {
+					dynamicLoading.load([
+						'javascript/main.phone.min.js',
+						'style/style.phone.css'
+					], function() {
+						window.readerConfigLoaded = true;
+					}, function() {
+						dynamicLoading.load([
+							'javascript/main.min.js',
+							'style/style.css'
+						], function() {
+							window.readerConfigLoaded = true;
+						});
+					});
+				} else {
+					dynamicLoading.load([
+						'javascript/main.pc.min.js',
+						'style/style.pc.css'
+					], function() {
+						window.readerConfigLoaded = true;
+					}, function() {
+						dynamicLoading.load([
+							'javascript/main.min.js',
+							'style/style.css'
+						], function() {
+							window.readerConfigLoaded = true;
+						});
+					});
+				}
+			} else {
+				dynamicLoading.load([
+					'javascript/main.min.js',
+					'style/style.css'
+				], function() {
+					window.readerConfigLoaded = true;
+				});
+			}
+		}, function() {
+			dynamicLoading.load([
+				'javascript/main.min.js',
+				'style/style.css'
+			], function() {
+				window.readerConfigLoaded = true;
+			});
+		});
+	})();
+	</script>
+</body>
 
-      <div class="cover-footer">
-        <span class="cf-rule"></span>
-        <span>Capability Brief · Prepared for Procurement Review</span>
-      </div>
-    </div>
-
-    <div class="cover-right">
-      <div class="cover-tagline">
-        White-labeled <span class="dot"></span> Configurable <span class="dot"></span> Audit-ready
-      </div>
-      <div class="cover-quote">
-        <div class="cover-quote-label">Incentive Management</div>
-        <div class="cover-quote-rule-top"></div>
-        <div class="q">You set the strategy.<br/>We make that happen.</div>
-        <div class="rule"></div>
-        <div class="who">Our promise to you</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       PAGE 2 — HOW IT WORKS (Overview)
-       ============================================================ -->
-  <section class="page overview" data-screen-label="02 How it works">
-
-    <header class="page-chrome-top">
-      <div class="chrome-mark">
-        <span class="dot"></span>
-        <span>Concentra · Solutions</span>
-      </div>
-      <span class="chrome-kicker">How it works</span>
-      <span class="chrome-page">02 / 06</span>
-    </header>
-
-    <div class="ov-wrap">
-      <div class="ov-head">
-        <div class="ov-head-left">
-          <span class="eyebrow">The system, end to end</span>
-          <h2 class="section-title">
-            Every point tracked<br/>
-            <em>Every reward earned</em>
-          </h2>
-        </div>
-        <p class="lede ov-lede">
-          Concentra provides the complete administrative platform behind
-          your incentive program — defining the catalog of awardable
-          activities, tracking what each member completes, and awarding
-          MOJO points the moment a threshold is met. When points are
-          earned, your team fulfills the physical incentive on your terms.
-        </p>
-      </div>
-
-      <div class="ov-flow">
-        <div class="ov-labels">
-          <div class="ov-label-group ov-label-concentra">
-            <span class="ov-side-label">We manage the process</span>
-            <span class="ov-side-rule ov-side-rule-blue"></span>
-          </div>
-          <div class="ov-label-group ov-label-client">
-            <span class="ov-side-rule ov-side-rule-orange"></span>
-            <span class="ov-side-label ov-side-label-client">You customize the award</span>
-          </div>
-        </div>
-
-        <div class="ov-cards-row">
-          <div class="ov-card">
-            <div class="ov-card-num">01</div>
-            <div class="ov-card-title">Define the catalog</div>
-            <div class="ov-card-body">
-              Any wellbeing activity — biometrics, coaching, challenges,
-              preventive care — assigned a point value you control.
-            </div>
-          </div>
-          <div class="ov-arrow">
-            <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><path d="M0 7h28m0 0l-6-6m6 6l-6 6" stroke="#19548F" stroke-width="1.5"/></svg>
-          </div>
-          <div class="ov-card">
-            <div class="ov-card-num">02</div>
-            <div class="ov-card-title">Track in real time</div>
-            <div class="ov-card-body">
-              Every member sees what counts, what it's worth, and
-              exactly where they stand on the path to a reward.
-            </div>
-          </div>
-          <div class="ov-arrow">
-            <svg width="32" height="1
+</html>
