@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>MedGuard</title>
+<!--
+  In-house flipbook viewer (replaces FlipHTML5).
+  To reuse for another piece: copy this folder, swap the images in pages/,
+  update PAGE_COUNT and PDF_FILE below. Page images: p01.webp, p02.webp, ...
+-->
+<style>
+  :root { --bg:#1f2329; --bar:#15181d; --ink:#e9edf2; --muted:#9aa4b1; --accent:#29abe2; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; background:var(--bg); color:var(--ink);
+    font-family:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow:hidden; }
+  .stage { position:absolute; inset:0 0 56px 0; display:flex; align-items:center; justify-content:center; padding:18px; }
+  #book { margin:0 auto; }
+  #book .page { background:#fff; }
+  #book .page img { width:100%; height:100%; display:block; object-fit:contain; user-select:none; -webkit-user-drag:none; }
+  .bar { position:absolute; left:0; right:0; bottom:0; height:56px; background:var(--bar);
+    display:flex; align-items:center; justify-content:center; gap:10px; padding:0 12px; }
+  .bar button, .bar a { appearance:none; border:0; background:transparent; color:var(--ink); cursor:pointer;
+    height:38px; min-width:38px; padding:0 10px; border-radius:6px; display:inline-flex; align-items:center;
+    justify-content:center; gap:6px; font-size:13px; text-decoration:none; }
+  .bar button:hover, .bar a:hover { background:rgba(255,255,255,.08); }
+  .bar button:disabled { opacity:.3; cursor:default; background:transparent; }
+  .bar svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .count { color:var(--muted); font-size:13px; min-width:70px; text-align:center; font-variant-numeric:tabular-nums; }
+  .spacer { width:14px; }
+  .side { position:absolute; top:0; bottom:56px; width:60px; display:flex; align-items:center; justify-content:center;
+    color:var(--ink); opacity:.55; cursor:pointer; border:0; background:transparent; }
+  .side:hover { opacity:1; }
+  .side svg { width:30px; height:30px; stroke:currentColor; fill:none; stroke-width:2; }
+  .side.prev { left:0; } .side.next { right:0; }
+  @media (max-width:640px){ .side{ display:none; } .label{ display:none; } #first,#last,.spacer{ display:none; } .bar{ gap:4px; } }
+  #book { transition: transform .5s ease; }
+  .loading { position:absolute; inset:0; display:grid; place-items:center; color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+  <div class="loading" id="loading">Loading…</div>
+  <div class="stage"><div id="book"></div></div>
+  <button class="side prev" id="sidePrev" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="side next" id="sideNext" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+
+  <div class="bar">
+    <button id="first" aria-label="First page"><svg viewBox="0 0 24 24"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg></button>
+    <button id="prev" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <span class="count" id="count">1 / 8</span>
+    <button id="next" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+    <button id="last" aria-label="Last page"><svg viewBox="0 0 24 24"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg></button>
+    <span class="spacer"></span>
+    <button id="fs" aria-label="Full screen"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><span class="label">Full screen</span></button>
+    <a id="dl" download aria-label="Download PDF"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="label">PDF</span></a>
+  </div>
+
+<script src="page-flip.browser.js"></script>
+<script>
+  // ===== Settings for this flipbook =====
+  var PAGE_COUNT = 8;
+  var PDF_FILE   = "MedGuard.pdf";
+  var PAGE_W = 816, PAGE_H = 1056;   // US Letter proportions
+  // ======================================
+
+  document.getElementById('dl').href = PDF_FILE;
+  var book = document.getElementById('book');
+  for (var i = 1; i <= PAGE_COUNT; i++) {
+    var d = document.createElement('div');
+    d.className = 'page';
+    d.innerHTML = '<img src="pages/p' + String(i).padStart(2, '0') + '.webp" alt="Page ' + i + '" loading="eager">';
+    book.appendChild(d);
+  }
+
+  var stage = document.querySelector('.stage');
+  function fit() {
+    // Size the book so a two-page spread (or one page on narrow screens) fits the stage.
+    var sw = stage.clientWidth - 36, sh = stage.clientHeight - 36;
+    var portrait = sw < 700;
+    var pages = portrait ? 1 : 2;
+    var h = Math.min(sh, (sw / pages) * PAGE_H / PAGE_W);
+    var w = h * PAGE_W / PAGE_H;
+    book.style.width = (w * pages) + 'px';
+    book.style.height = h + 'px';
+    return { w: Math.floor(w), h: Math.floor(h), portrait: portrait };
+  }
+
+  var size = fit();
+  var pf = new St.PageFlip(book, {
+    width: size.w, height: size.h, size: 'fixed',
+    showCover: true, usePortrait: size.portrait, drawShadow: true,
+    maxShadowOpacity: 0.35, flippingTime: 700, mobileScrollSupport: false
+  });
+  pf.loadFromHTML(document.querySelectorAll('#book .page'));
+  document.getElementById('loading').remove();
+
+  var count = document.getElementById('count');
+  function update() {
+    var idx = pf.getCurrentPageIndex(), n = pf.getPageCount();
+    var spread = pf.getOrientation() === 'landscape' && idx > 0 && idx < n - 1;
+    count.textContent = spread ? (idx + 1) + '–' + (idx + 2) + ' / ' + n : (idx + 1) + ' / ' + n;
+    document.getElementById('prev').disabled = document.getElementById('first').disabled = idx === 0;
+    var atEnd = spread ? idx + 2 >= n : idx >= n - 1;
+    document.getElementById('next').disabled = document.getElementById('last').disabled = atEnd;
+    // Center the closed book: front cover sits on the right half, back cover on the left half.
+    var land = pf.getOrientation() === 'landscape';
+    book.style.transform = !land ? '' : idx === 0 ? 'translateX(-25%)' : (idx >= n - 1 && n % 2 === 0) ? 'translateX(25%)' : '';
+  }
+  pf.on('flip', update); pf.on('changeOrientation', update); update();
+
+  document.getElementById('prev').onclick = document.getElementById('sidePrev').onclick = function(){ pf.flipPrev(); };
+  document.getElementById('next').onclick = document.getElementById('sideNext').onclick = function(){ pf.flipNext(); };
+  document.getElementById('first').onclick = function(){ pf.turnToPage(0); update(); };
+  document.getElementById('last').onclick  = function(){ pf.turnToPage(pf.getPageCount() - 1); update(); };
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight') pf.flipNext();
+    if (e.key === 'ArrowLeft')  pf.flipPrev();
+  });
+  document.getElementById('fs').onclick = function(){
+    var el = document.documentElement;
+    if (!document.fullscreenElement) (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    else (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  };
+
+  // Rebuild at the new size when the window changes (keeps the current page).
+  var t;
+  window.addEventListener('resize', function(){
+    clearTimeout(t);
+    t = setTimeout(function(){
+      var at = pf.getCurrentPageIndex(), s = fit();
+      pf.getSettings().width = s.w; pf.getSettings().height = s.h;
+      pf.getSettings().usePortrait = s.portrait;
+      pf.update(); pf.turnToPage(at); update();
+    }, 200);
+  });
+</script>
+</body>
+</html>
