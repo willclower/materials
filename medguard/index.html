@@ -13,12 +13,25 @@
 <style>
   :root { --bg:#1f2329; --bar:#15181d; --ink:#e9edf2; --muted:#9aa4b1; --accent:#29abe2; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  html, body { height:100%; background:var(--bg); color:var(--ink);
+  html, body { height:100%; background:radial-gradient(ellipse at 50% 40%, #f1f3f6 0%, #d3d9e0 60%, #b7c0ca 100%); color:var(--ink);
     font-family:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow:hidden; }
   .stage { position:absolute; inset:0 0 56px 0; display:flex; align-items:center; justify-content:center; padding:18px; }
-  #book { margin:0 auto; }
+  /* book wrapper: holds the shadow, the flip engine, and the spine */
+  .bookwrap { position:relative; transition:transform .55s ease; }
+  #book { position:absolute; inset:0; z-index:2; }
   #book .page { background:#fff; }
+  #book .page.flyleaf { background:transparent; }
   #book .page img { width:100%; height:100%; display:block; object-fit:contain; user-select:none; -webkit-user-drag:none; }
+  /* soft shadow sitting under the visible page(s) — resizes for cover / spread / back cover */
+  #under { position:absolute; top:0; bottom:0; z-index:1; border-radius:2px; pointer-events:none;
+    box-shadow:0 28px 60px rgba(20,32,48,.42), 0 6px 16px rgba(20,32,48,.28);
+    transition:left .55s ease, width .55s ease, opacity .3s; }
+  /* center spine: dark fold with soft falloff either side, plus a hairline crease */
+  #spine { position:absolute; top:0; bottom:0; left:50%; width:64px; margin-left:-32px; z-index:3; pointer-events:none;
+    opacity:0; transition:opacity .35s;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(20,30,45,.10) 30%, rgba(20,30,45,.34) 47%, rgba(0,0,0,.42) 50%, rgba(20,30,45,.34) 53%, rgba(20,30,45,.10) 70%, rgba(0,0,0,0) 100%); }
+  #spine.on { opacity:1; }
   .bar { position:absolute; left:0; right:0; bottom:0; height:56px; background:var(--bar);
     display:flex; align-items:center; justify-content:center; gap:10px; padding:0 12px; }
   .bar button, .bar a { appearance:none; border:0; background:transparent; color:var(--ink); cursor:pointer;
@@ -30,18 +43,18 @@
   .count { color:var(--muted); font-size:13px; min-width:70px; text-align:center; font-variant-numeric:tabular-nums; }
   .spacer { width:14px; }
   .side { position:absolute; top:0; bottom:56px; width:60px; display:flex; align-items:center; justify-content:center;
-    color:var(--ink); opacity:.55; cursor:pointer; border:0; background:transparent; }
+    color:#2c3744; opacity:.5; cursor:pointer; border:0; background:transparent; z-index:5; }
   .side:hover { opacity:1; }
   .side svg { width:30px; height:30px; stroke:currentColor; fill:none; stroke-width:2; }
   .side.prev { left:0; } .side.next { right:0; }
+  #snd.off .wave { display:none; }
   @media (max-width:640px){ .side{ display:none; } .label{ display:none; } #first,#last,.spacer{ display:none; } .bar{ gap:4px; } }
-  #book { transition: transform .5s ease; }
-  .loading { position:absolute; inset:0; display:grid; place-items:center; color:var(--muted); font-size:14px; }
+  .loading { position:absolute; inset:0; display:grid; place-items:center; color:#5b6672; font-size:14px; }
 </style>
 </head>
 <body>
   <div class="loading" id="loading">Loading…</div>
-  <div class="stage"><div id="book"></div></div>
+  <div class="stage"><div class="bookwrap" id="wrap"><div id="under"></div><div id="book"></div><div id="spine"></div></div></div>
   <button class="side prev" id="sidePrev" aria-label="Previous page"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <button class="side next" id="sideNext" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
 
@@ -52,6 +65,7 @@
     <button id="next" aria-label="Next page"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
     <button id="last" aria-label="Last page"><svg viewBox="0 0 24 24"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg></button>
     <span class="spacer"></span>
+    <button id="snd" aria-label="Page-turn sound"><svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
     <button id="fs" aria-label="Full screen"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><span class="label">Full screen</span></button>
     <a id="dl" download aria-label="Download PDF"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="label">PDF</span></a>
   </div>
@@ -63,61 +77,109 @@
   var PDF_FILE   = "MedGuard.pdf";
   var PAGE_W = 816, PAGE_H = 1056;   // US Letter proportions
   // ======================================
+  //
+  // How the "paper on every page" effect works: StPageFlip makes the first and last page stiff
+  // "hard covers" whenever showCover is on. So we run with showCover:false and add one invisible
+  // flyleaf page before the cover and one after the back cover (spread view only). Every real page,
+  // covers included, then turns like paper. The flyleaves are transparent and the book is
+  // re-centered while it is closed, so they are never seen.
 
   document.getElementById('dl').href = PDF_FILE;
-  var book = document.getElementById('book');
-  for (var i = 1; i <= PAGE_COUNT; i++) {
-    var d = document.createElement('div');
-    d.className = 'page';
-    d.innerHTML = '<img src="pages/p' + String(i).padStart(2, '0') + '.webp" alt="Page ' + i + '" loading="eager">';
-    book.appendChild(d);
-  }
+  var wrap = document.getElementById('wrap'), stage = document.querySelector('.stage');
+  var under = document.getElementById('under'), spine = document.getElementById('spine');
+  var count = document.getElementById('count');
+  var pf = null, portrait = false, book = null, N = 0;
 
-  var stage = document.querySelector('.stage');
   function fit() {
-    // Size the book so a two-page spread (or one page on narrow screens) fits the stage.
     var sw = stage.clientWidth - 36, sh = stage.clientHeight - 36;
-    var portrait = sw < 700;
-    var pages = portrait ? 1 : 2;
+    var por = sw < 700, pages = por ? 1 : 2;
     var h = Math.min(sh, (sw / pages) * PAGE_H / PAGE_W);
     var w = h * PAGE_W / PAGE_H;
-    book.style.width = (w * pages) + 'px';
-    book.style.height = h + 'px';
-    return { w: Math.floor(w), h: Math.floor(h), portrait: portrait };
+    wrap.style.width = (w * pages) + 'px'; wrap.style.height = h + 'px';
+    return { w: Math.floor(w), h: Math.floor(h), portrait: por };
+  }
+
+  function build(size, startPageNum) {
+    portrait = size.portrait;
+    if (pf) { try { pf.destroy(); } catch (e) {} }
+    var old = document.getElementById('book'); if (old) old.remove();
+    book = document.createElement('div'); book.id = 'book'; wrap.insertBefore(book, spine);
+    function addPage(n) {
+      var d = document.createElement('div'); d.className = 'page';
+      if (n) d.innerHTML = '<img src="pages/p' + String(n).padStart(2, '0') + '.webp" alt="Page ' + n + '" loading="eager">';
+      else d.className = 'page flyleaf';
+      book.appendChild(d);
+    }
+    if (!portrait) addPage(0);
+    for (var i = 1; i <= PAGE_COUNT; i++) addPage(i);
+    if (!portrait) addPage(0);
+    N = book.children.length;
+    pf = new St.PageFlip(book, {
+      width: size.w, height: size.h, size: 'fixed',
+      showCover: false, usePortrait: size.portrait, drawShadow: true,
+      maxShadowOpacity: 0.55, flippingTime: 700, mobileScrollSupport: false
+    });
+    pf.loadFromHTML(book.querySelectorAll('.page'));
+    pf.on('flip', update); pf.on('changeOrientation', update);
+    pf.on('changeState', function (e) { if (e.data === 'flipping') flipSound(); });
+    var idx = portrait ? startPageNum - 1 : (startPageNum <= 1 ? 0 : (startPageNum % 2 === 0 ? startPageNum : startPageNum - 1));
+    if (idx > 0) pf.turnToPage(idx);
+    update();
+  }
+
+  // Which real pages are showing -> counter, button states, centering, shadow, spine.
+  function state() {
+    var idx = pf.getCurrentPageIndex();
+    if (portrait) return { first: idx + 1, last: idx + 1, mode: 'single', atStart: idx === 0, atEnd: idx >= PAGE_COUNT - 1 };
+    if (idx <= 0) return { first: 1, last: 1, mode: 'front', atStart: true, atEnd: false };
+    if (idx >= N - 2) return { first: PAGE_COUNT, last: PAGE_COUNT, mode: 'back', atStart: false, atEnd: true };
+    return { first: idx, last: idx + 1, mode: 'spread', atStart: false, atEnd: false };
+  }
+  function update() {
+    var s = state();
+    count.textContent = (s.first === s.last ? s.first : s.first + '–' + s.last) + ' / ' + PAGE_COUNT;
+    document.getElementById('prev').disabled = document.getElementById('first').disabled = s.atStart;
+    document.getElementById('next').disabled = document.getElementById('last').disabled = s.atEnd;
+    // center the closed book, and size the shadow under whatever is visible
+    wrap.style.transform = s.mode === 'front' ? 'translateX(-25%)' : s.mode === 'back' ? 'translateX(25%)' : '';
+    if (s.mode === 'single') { under.style.left = '0'; under.style.width = '100%'; }
+    else if (s.mode === 'front') { under.style.left = '50%'; under.style.width = '50%'; }
+    else if (s.mode === 'back') { under.style.left = '0'; under.style.width = '50%'; }
+    else { under.style.left = '0'; under.style.width = '100%'; }
+    spine.classList.toggle('on', s.mode === 'spread');
+  }
+
+  // ----- page-turn sound (synthesized in the browser, no audio file) -----
+  var ac = null, soundOn = true, snd = document.getElementById('snd');
+  snd.onclick = function () { soundOn = !soundOn; snd.classList.toggle('off', !soundOn); };
+  function flipSound() {
+    if (!soundOn) return;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      if (ac.state === 'suspended') ac.resume();
+      var n = Math.floor(ac.sampleRate * 0.19), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+      for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6);
+      var src = ac.createBufferSource(); src.buffer = b;
+      var f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2100; f.Q.value = .6;
+      var g = ac.createGain(); g.gain.value = .16;
+      src.connect(f); f.connect(g); g.connect(ac.destination); src.start();
+    } catch (e) {}
   }
 
   var size = fit();
-  var pf = new St.PageFlip(book, {
-    width: size.w, height: size.h, size: 'fixed',
-    showCover: true, usePortrait: size.portrait, drawShadow: true,
-    maxShadowOpacity: 0.35, flippingTime: 700, mobileScrollSupport: false
-  });
-  pf.loadFromHTML(document.querySelectorAll('#book .page'));
+  build(size, 1);
   document.getElementById('loading').remove();
 
-  var count = document.getElementById('count');
-  function update() {
-    var idx = pf.getCurrentPageIndex(), n = pf.getPageCount();
-    var spread = pf.getOrientation() === 'landscape' && idx > 0 && idx < n - 1;
-    count.textContent = spread ? (idx + 1) + '–' + (idx + 2) + ' / ' + n : (idx + 1) + ' / ' + n;
-    document.getElementById('prev').disabled = document.getElementById('first').disabled = idx === 0;
-    var atEnd = spread ? idx + 2 >= n : idx >= n - 1;
-    document.getElementById('next').disabled = document.getElementById('last').disabled = atEnd;
-    // Center the closed book: front cover sits on the right half, back cover on the left half.
-    var land = pf.getOrientation() === 'landscape';
-    book.style.transform = !land ? '' : idx === 0 ? 'translateX(-25%)' : (idx >= n - 1 && n % 2 === 0) ? 'translateX(25%)' : '';
-  }
-  pf.on('flip', update); pf.on('changeOrientation', update); update();
-
-  document.getElementById('prev').onclick = document.getElementById('sidePrev').onclick = function(){ pf.flipPrev(); };
-  document.getElementById('next').onclick = document.getElementById('sideNext').onclick = function(){ pf.flipNext(); };
-  document.getElementById('first').onclick = function(){ pf.turnToPage(0); update(); };
-  document.getElementById('last').onclick  = function(){ pf.turnToPage(pf.getPageCount() - 1); update(); };
-  document.addEventListener('keydown', function(e){
+  document.getElementById('prev').onclick = document.getElementById('sidePrev').onclick = function () { pf.flipPrev(); };
+  document.getElementById('next').onclick = document.getElementById('sideNext').onclick = function () { pf.flipNext(); };
+  // first / last: animate the turn (fall back to a jump if the engine refuses)
+  document.getElementById('first').onclick = function () { try { pf.flip(0); } catch (e) { pf.turnToPage(0); } setTimeout(update, 50); };
+  document.getElementById('last').onclick  = function () { var t = portrait ? PAGE_COUNT - 1 : N - 2; try { pf.flip(t); } catch (e) { pf.turnToPage(t); } setTimeout(update, 50); };
+  document.addEventListener('keydown', function (e) {
     if (e.key === 'ArrowRight') pf.flipNext();
     if (e.key === 'ArrowLeft')  pf.flipPrev();
   });
-  document.getElementById('fs').onclick = function(){
+  document.getElementById('fs').onclick = function () {
     var el = document.documentElement;
     if (!document.fullscreenElement) (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
     else (document.exitFullscreen || document.webkitExitFullscreen).call(document);
@@ -125,14 +187,9 @@
 
   // Rebuild at the new size when the window changes (keeps the current page).
   var t;
-  window.addEventListener('resize', function(){
+  window.addEventListener('resize', function () {
     clearTimeout(t);
-    t = setTimeout(function(){
-      var at = pf.getCurrentPageIndex(), s = fit();
-      pf.getSettings().width = s.w; pf.getSettings().height = s.h;
-      pf.getSettings().usePortrait = s.portrait;
-      pf.update(); pf.turnToPage(at); update();
-    }, 200);
+    t = setTimeout(function () { var s = state(); build(fit(), s.first); }, 200);
   });
 </script>
 </body>
